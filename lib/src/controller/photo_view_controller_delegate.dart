@@ -33,9 +33,10 @@ mixin PhotoViewControllerDelegate on State<PhotoViewCore> {
   /// Mark if scale need recalculation, useful for scale boundaries changes.
   bool markNeedsScaleRecalc = true;
 
-  void startListeners() {
+  void initDelegate() {
     controller.addIgnorableListener(_blindScaleListener);
     scaleStateController.addIgnorableListener(_blindScaleStateListener);
+    markNeedsScaleRecalc = controller.scale == null;
   }
 
   void _blindScaleStateListener() {
