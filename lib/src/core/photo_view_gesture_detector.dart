@@ -52,6 +52,14 @@ class PhotoViewGestureDetector extends StatelessWidget {
       );
     }
 
+    gestures[DoubleTapGestureRecognizer] =
+        GestureRecognizerFactoryWithHandlers<DoubleTapGestureRecognizer>(
+      () => DoubleTapGestureRecognizer(debugOwner: this),
+      (DoubleTapGestureRecognizer instance) {
+        instance..onDoubleTap = onDoubleTap;
+      },
+    );
+
     gestures[PhotoViewGestureRecognizer] =
         GestureRecognizerFactoryWithHandlers<PhotoViewGestureRecognizer>(
       () => PhotoViewGestureRecognizer(
@@ -64,16 +72,8 @@ class PhotoViewGestureDetector extends StatelessWidget {
       },
     );
 
-    gestures[DoubleTapGestureRecognizer] =
-        GestureRecognizerFactoryWithHandlers<DoubleTapGestureRecognizer>(
-      () => DoubleTapGestureRecognizer(debugOwner: this),
-      (DoubleTapGestureRecognizer instance) {
-        instance..onDoubleTap = onDoubleTap;
-      },
-    );
-
     return RawGestureDetector(
-      behavior: behavior ?? HitTestBehavior.translucent,
+      behavior: behavior,
       child: child,
       gestures: gestures,
     );
