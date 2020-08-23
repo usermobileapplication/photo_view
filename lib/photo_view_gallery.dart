@@ -224,18 +224,23 @@ class _PhotoViewGalleryState extends State<PhotoViewGallery> {
 
   @override
   Widget build(BuildContext context) {
+
+    final pvPhysics = PhotoViewPageViewScrollPhysics(parent: widget.scrollPhysics);
+
     // Enable corner hit test
     return PhotoViewGestureDetectorScope(
       axis: widget.scrollDirection,
-      child: PageView.builder(
-        reverse: widget.reverse,
-        controller: _controller,
-        onPageChanged: widget.onPageChanged,
-        itemCount: itemCount,
-        itemBuilder: _buildItem,
-        scrollDirection: widget.scrollDirection,
-        physics: widget.scrollPhysics,
-      ),
+      child: PhotoViewGestureDetector(
+        child: PageView.builder(
+          reverse: widget.reverse,
+          controller: _controller,
+          onPageChanged: widget.onPageChanged,
+          itemCount: itemCount,
+          itemBuilder: _buildItem,
+          scrollDirection: widget.scrollDirection,
+          physics: pvPhysics,
+        ),
+      )
     );
   }
 
@@ -265,7 +270,7 @@ class _PhotoViewGalleryState extends State<PhotoViewGallery> {
             tightMode: pageOption.tightMode,
             filterQuality: pageOption.filterQuality,
             basePosition: pageOption.basePosition,
-            disableGestures: pageOption.disableGestures,
+            disableGestures: true,
           )
         : PhotoView(
             key: ObjectKey(index),
@@ -290,7 +295,7 @@ class _PhotoViewGalleryState extends State<PhotoViewGallery> {
             tightMode: pageOption.tightMode,
             filterQuality: pageOption.filterQuality,
             basePosition: pageOption.basePosition,
-            disableGestures: pageOption.disableGestures,
+            disableGestures: true,
           );
 
     return ClipRect(

@@ -4,9 +4,8 @@ import 'package:photo_view/src/controller/photo_view_controller_delegate.dart'
     show PhotoViewControllerDelegate;
 
 mixin HitCornersDetector on PhotoViewControllerDelegate {
-  HitAxis hitAxis() => HitAxis(hitCornersX(), hitCornersY());
 
-  HitCorners hitCornersX() {
+  HitCorners _hitCornersX() {
     final double childWidth = scaleBoundaries.childSize.width * scale;
     final double screenWidth = scaleBoundaries.outerSize.width;
     if (screenWidth >= childWidth) {
@@ -17,7 +16,7 @@ mixin HitCornersDetector on PhotoViewControllerDelegate {
     return HitCorners(x <= cornersX.min, x >= cornersX.max);
   }
 
-  HitCorners hitCornersY() {
+  HitCorners _hitCornersY() {
     final double childHeight = scaleBoundaries.childSize.height * scale;
     final double screenHeight = scaleBoundaries.outerSize.height;
     if (screenHeight >= childHeight) {
@@ -28,8 +27,8 @@ mixin HitCornersDetector on PhotoViewControllerDelegate {
     return HitCorners(y <= cornersY.min, y >= cornersY.max);
   }
 
-  bool shouldMoveX(Offset move) {
-    final hitCornersX = this.hitCornersX();
+  bool _shouldMoveX(Offset move) {
+    final hitCornersX = _hitCornersX();
 
     if (hitCornersX.hasHitAny && move != Offset.zero) {
       if (hitCornersX.hasHitBoth) {
@@ -43,8 +42,8 @@ mixin HitCornersDetector on PhotoViewControllerDelegate {
     return true;
   }
 
-  bool shouldMoveY(Offset move) {
-    final hitCornersY = this.hitCornersY();
+  bool _shouldMoveY(Offset move) {
+    final hitCornersY = _hitCornersY();
     if (hitCornersY.hasHitAny && move != Offset.zero) {
       if (hitCornersY.hasHitBoth) {
         return false;
@@ -56,17 +55,15 @@ mixin HitCornersDetector on PhotoViewControllerDelegate {
     }
     return true;
   }
-}
 
-class HitAxis {
-  HitAxis(this.hasHitX, this.hasHitY);
-
-  final HitCorners hasHitX;
-  final HitCorners hasHitY;
-
-  bool get hasHitAny => hasHitX.hasHitAny || hasHitY.hasHitAny;
-
-  bool get hasHitBoth => hasHitX.hasHitBoth && hasHitY.hasHitBoth;
+  bool shouldMove(Offset move, Axis axis) {
+    assert(axis != null);
+    assert(move != null);
+    if(axis == Axis.vertical) {
+      return _shouldMoveY(move);
+    }
+    return _shouldMoveX(move);
+  }
 }
 
 class HitCorners {

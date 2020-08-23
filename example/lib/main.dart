@@ -1,7 +1,11 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import './screens/home_screen.dart';
 
-void main() => runApp(MyApp());
+void main() {
+  debugPrintGestureArenaDiagnostics = true;
+  runApp(MyApp());
+}
 
 ThemeData theme = ThemeData(
   primaryColor: Colors.black,

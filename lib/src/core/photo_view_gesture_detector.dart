@@ -114,26 +114,40 @@ class PhotoViewGestureRecognizer extends ScaleGestureRecognizer {
 
   @override
   void handleEvent(PointerEvent event) {
+    assert(!ready);
     if (validateAxis != null) {
       _computeEvent(event);
-      _updateDistances();
-      _decideIfWeAcceptEvent(event);
+      if (event is PointerMoveEvent) {
+        final move = _initialFocalPoint - _currentFocalPoint;
+        final shouldMove = hitDetector.shouldMove(move, validateAxis);
+        print(move.distance);
+        if (!shouldMove) {
+          //return resolve(GestureDisposition.rejected);
+        } else if(move.distance > 0) {
+//          resolve(GestureDisposition.accepted);
+//          acceptGesture(event.pointer);
+//          return;
+        }
+      }
     }
     super.handleEvent(event);
   }
 
   void _computeEvent(PointerEvent event) {
+    bool didChangeConfiguration = false;
     if (event is PointerMoveEvent) {
-      if (!event.synthesized) {
-        _pointerLocations[event.pointer] = event.position;
-      }
+      _pointerLocations[event.pointer] = event.position;
     } else if (event is PointerDownEvent) {
       _pointerLocations[event.pointer] = event.position;
+      didChangeConfiguration = true;
     } else if (event is PointerUpEvent || event is PointerCancelEvent) {
       _pointerLocations.remove(event.pointer);
+      didChangeConfiguration = true;
     }
-
-    _initialFocalPoint = _currentFocalPoint;
+    _updateDistances();
+    if (didChangeConfiguration) {
+      _initialFocalPoint = _currentFocalPoint;
+    }
   }
 
   void _updateDistances() {
@@ -143,19 +157,6 @@ class PhotoViewGestureRecognizer extends ScaleGestureRecognizer {
       focalPoint += _pointerLocations[pointer];
     _currentFocalPoint =
         count > 0 ? focalPoint / count.toDouble() : Offset.zero;
-  }
-
-  void _decideIfWeAcceptEvent(PointerEvent event) {
-    if (!(event is PointerMoveEvent)) {
-      return;
-    }
-    final move = _initialFocalPoint - _currentFocalPoint;
-    final bool shouldMove = validateAxis == Axis.vertical
-        ? hitDetector.shouldMoveY(move)
-        : hitDetector.shouldMoveX(move);
-    if (shouldMove || _pointerLocations.keys.length > 1) {
-      acceptGesture(event.pointer);
-    }
   }
 }
 
@@ -194,4 +195,27 @@ class PhotoViewGestureDetectorScope extends InheritedWidget {
   bool updateShouldNotify(PhotoViewGestureDetectorScope oldWidget) {
     return axis != oldWidget.axis;
   }
+}
+
+class PhotoViewPageViewScrollPhysics extends ScrollPhysics {
+  const PhotoViewPageViewScrollPhysics({
+    this.touchSlopFactor = 1.1,
+    ScrollPhysics parent,
+  }) : super(parent: parent);
+
+  // in [0, 1]
+  // 0: most reactive but will not let PhotoView recognizers accept gestures
+  // 1: less reactive but gives the most leeway to PhotoView recognizers
+  final double touchSlopFactor;
+
+  @override
+  PhotoViewPageViewScrollPhysics applyTo(ScrollPhysics ancestor) {
+    return PhotoViewPageViewScrollPhysics(
+      touchSlopFactor: touchSlopFactor,
+      parent: buildParent(ancestor),
+    );
+  }
+
+  @override
+  double get dragStartDistanceMotionThreshold => kPanSlop * touchSlopFactor;
 }
