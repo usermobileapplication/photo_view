@@ -27,42 +27,43 @@ mixin HitCornersDetector on PhotoViewControllerDelegate {
     return HitCorners(y <= cornersY.min, y >= cornersY.max);
   }
 
-  bool _shouldMoveX(Offset move) {
+  bool _shouldMoveAxis(HitCorners hitCorners, double mainAxisMove, double crossAxisMove, double crossAxisSlop){
+    if(mainAxisMove == 0) {
+      return false;
+    }
+    if (!hitCorners.hasHitAny) {
+      return true;
+    }
+    final axisBlocked = hitCorners.hasHitBoth || (hitCorners.hasHitMax ? mainAxisMove > 0 : mainAxisMove < 0) ;
+    if (axisBlocked) {
+      return false;
+    }
+    return true;
+  }
+
+  bool _shouldMoveX(Offset move, double crossAxisSlop) {
     final hitCornersX = _hitCornersX();
+    final mainAxisMove = move.dx;
+    final crossAxisMove = move.dy;
 
-    if (hitCornersX.hasHitAny && move != Offset.zero) {
-      if (hitCornersX.hasHitBoth) {
-        return false;
-      }
-      if (hitCornersX.hasHitMax) {
-        return move.dx < 0;
-      }
-      return move.dx > 0;
-    }
-    return true;
+    return _shouldMoveAxis(hitCornersX, mainAxisMove, crossAxisMove, crossAxisSlop);
   }
 
-  bool _shouldMoveY(Offset move) {
+  bool _shouldMoveY(Offset move, double crossAxisSlop) {
     final hitCornersY = _hitCornersY();
-    if (hitCornersY.hasHitAny && move != Offset.zero) {
-      if (hitCornersY.hasHitBoth) {
-        return false;
-      }
-      if (hitCornersY.hasHitMax) {
-        return move.dy < 0;
-      }
-      return move.dy > 0;
-    }
-    return true;
+    final mainAxisMove = move.dy;
+    final crossAxisMove = move.dx;
+
+    return _shouldMoveAxis(hitCornersY, mainAxisMove, crossAxisMove, crossAxisSlop);
   }
 
-  bool shouldMove(Offset move, Axis axis) {
-    assert(axis != null);
+  bool shouldMove(Offset move, Axis mainAxis, double crossAxisSlop) {
+    assert(mainAxis != null);
     assert(move != null);
-    if(axis == Axis.vertical) {
-      return _shouldMoveY(move);
+    if(mainAxis == Axis.vertical) {
+      return _shouldMoveY(move, crossAxisSlop);
     }
-    return _shouldMoveX(move);
+    return _shouldMoveX(move, crossAxisSlop);
   }
 }
 

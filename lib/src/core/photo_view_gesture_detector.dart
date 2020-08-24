@@ -1,4 +1,5 @@
 import 'package:flutter/gestures.dart';
+import 'package:flutter/physics.dart';
 import 'package:flutter/widgets.dart';
 
 import 'photo_view_hit_corners.dart';
@@ -94,6 +95,8 @@ class PhotoViewGestureRecognizer extends ScaleGestureRecognizer {
 
   Offset _initialFocalPoint;
   Offset _currentFocalPoint;
+  double _initialSpan;
+  double _currentSpan;
 
   bool ready = true;
 
@@ -102,6 +105,8 @@ class PhotoViewGestureRecognizer extends ScaleGestureRecognizer {
     if (ready) {
       ready = false;
       _pointerLocations = <int, Offset>{};
+      _initialSpan = 0.0;
+      _currentSpan = 0.0;
     }
     super.addAllowedPointer(event);
   }
@@ -118,15 +123,14 @@ class PhotoViewGestureRecognizer extends ScaleGestureRecognizer {
     if (validateAxis != null) {
       _computeEvent(event);
       if (event is PointerMoveEvent) {
+        final isPinch = _pointerLocations.length > 1;
+        final double spanDelta = (_currentSpan - _initialSpan).abs();
         final move = _initialFocalPoint - _currentFocalPoint;
-        final shouldMove = hitDetector.shouldMove(move, validateAxis);
-        print(move.distance);
-        if (!shouldMove) {
-          //return resolve(GestureDisposition.rejected);
-        } else if(move.distance > 0) {
-//          resolve(GestureDisposition.accepted);
-//          acceptGesture(event.pointer);
-//          return;
+        final shouldMove = hitDetector.shouldMove(move, validateAxis, kTouchSlop);
+        if (!shouldMove && !isPinch) {
+          return resolve(GestureDisposition.rejected);
+        } else if(spanDelta > kScaleSlop || move.distance >= kTouchSlop) {
+          resolve(GestureDisposition.accepted);
         }
       }
     }
@@ -147,6 +151,7 @@ class PhotoViewGestureRecognizer extends ScaleGestureRecognizer {
     _updateDistances();
     if (didChangeConfiguration) {
       _initialFocalPoint = _currentFocalPoint;
+      _initialSpan = _currentSpan;
     }
   }
 
@@ -197,25 +202,25 @@ class PhotoViewGestureDetectorScope extends InheritedWidget {
   }
 }
 
+
 class PhotoViewPageViewScrollPhysics extends ScrollPhysics {
   const PhotoViewPageViewScrollPhysics({
-    this.touchSlopFactor = 1.1,
     ScrollPhysics parent,
   }) : super(parent: parent);
 
-  // in [0, 1]
-  // 0: most reactive but will not let PhotoView recognizers accept gestures
-  // 1: less reactive but gives the most leeway to PhotoView recognizers
-  final double touchSlopFactor;
+  static final SpringDescription springDefault = SpringDescription.withDampingRatio(
+    mass: 0.1,
+    stiffness: 100.0,
+    ratio: 1.0           ,
+  );
+
+  @override
+  SpringDescription get spring => springDefault;
 
   @override
   PhotoViewPageViewScrollPhysics applyTo(ScrollPhysics ancestor) {
     return PhotoViewPageViewScrollPhysics(
-      touchSlopFactor: touchSlopFactor,
       parent: buildParent(ancestor),
     );
   }
-
-  @override
-  double get dragStartDistanceMotionThreshold => kPanSlop * touchSlopFactor;
 }
