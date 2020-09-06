@@ -130,7 +130,12 @@ double _scaleForCovering(Size size, Size childSize) {
 }
 
 double _clampSize(double size, ScaleBoundaries scaleBoundaries) {
-  return size.clamp(scaleBoundaries.minScale, scaleBoundaries.maxScale);
+  if (size > scaleBoundaries.minScale) {
+    return scaleBoundaries.maxScale;
+  } else {
+    return size;
+  }
+  //return size.clamp(scaleBoundaries.minScale, scaleBoundaries.maxScale);
 }
 
 /// Simple class to store a min and a max value
